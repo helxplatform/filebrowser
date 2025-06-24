@@ -1,38 +1,42 @@
-# Use Go base image
-FROM golang:1.24-bookworm
+#########################
+# Go base builder stage #
+#########################
+FROM golang:1.24-bookworm as builder
 
-# Make user and create necessary directories
-ENV UID=1000
-ENV GID=1000
+WORKDIR /src
 
-RUN groupadd -g $GID user && \
-  useradd -m -u $UID -g user user && \
-  mkdir -p /config /database /srv && \
-  chown -R user:user /config /database /srv
+COPY filebrowser /src/filebrowser
+COPY docker/common/ /src/common
+COPY docker/debian /src/debian
+
+# Possibly build from source here...
+
+##########################
+# Production image stage #
+##########################
+FROM debian:bookworm-slim
 
 # Copy files and set permissions
-COPY filebrowser /bin/filebrowser
-COPY filebrowser /filebrowser
-COPY docker/common/ /
-COPY docker/debian/ /
+COPY --from=builder /src/filebrowser /bin/filebrowser
+COPY --from=builder /src/filebrowser /filebrowser
+COPY --from=builder /src/common/ /
+COPY --from=builder /src/debian/ /
 
-RUN chmod +x /bin/filebrowser /filebrowser /healthcheck.sh /init.sh && \
-  chown -R user:user /bin/filebrowser /defaults /healthcheck.sh /init.sh
-
-# Install Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs
-
-# Verify Node.js installation
-RUN node -v && npm -v
+RUN chmod +x /bin/filebrowser /filebrowser /healthcheck.sh /init.sh
 
 # Update package list and install required packages
 RUN apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates mailcap curl jq tini libnss-ldap
+  DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
+  DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+    ca-certificates \
+    media-types \
+    wget \
+    tini \
+    libnss-ldap && \
+  apt-get clean
 
 
 HEALTHCHECK --start-period=2s --interval=5s --timeout=3s CMD /healthcheck.sh || exit 1
-
-USER user
 
 VOLUME /srv /config /database
 
