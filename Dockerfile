@@ -1,26 +1,10 @@
-#########################
-# Go base builder stage #
-#########################
-FROM golang:1.24-bookworm as builder
-
-WORKDIR /src
-
-COPY filebrowser /src/filebrowser
-COPY docker/common/ /src/common
-COPY docker/debian /src/debian
-
-# Possibly build from source here...
-
-##########################
-# Production image stage #
-##########################
 FROM debian:bookworm-slim
 
 # Copy files and set permissions
-COPY --from=builder /src/filebrowser /bin/filebrowser
-COPY --from=builder /src/filebrowser /filebrowser
-COPY --from=builder /src/common/ /
-COPY --from=builder /src/debian/ /
+COPY filebrowser /bin/filebrowser
+COPY filebrowser /filebrowser
+COPY docker/common/ /
+COPY docker/debian/ /
 
 RUN chmod +x /bin/filebrowser /filebrowser /healthcheck.sh /init.sh
 

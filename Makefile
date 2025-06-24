@@ -4,6 +4,7 @@ include tools.mk
 LDFLAGS += -X "$(MODULE)/version.Version=$(VERSION)" -X "$(MODULE)/version.CommitSHA=$(VERSION_HASH)"
 GOOS ?= linux
 GOARCH ?= amd64
+CGO_ENABLED ?= 0
 
 ## Build:
 
@@ -16,7 +17,7 @@ build-frontend: ## Build frontend
 
 .PHONY: build-backend
 build-backend: ## Build backend
-	$Q GOOS=$(GOOS) GOARCH=$(GOARCH) $(go) build -ldflags '$(LDFLAGS)' -o .
+	$Q GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) $(go) build -ldflags '$(LDFLAGS)' -o .
 
 .PHONY: test
 test: | test-frontend test-backend ## Run all tests
