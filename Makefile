@@ -2,6 +2,8 @@ include common.mk
 include tools.mk
 
 LDFLAGS += -X "$(MODULE)/version.Version=$(VERSION)" -X "$(MODULE)/version.CommitSHA=$(VERSION_HASH)"
+GOOS ?= linux
+GOARCH ?= amd64
 
 ## Build:
 
@@ -10,17 +12,18 @@ build: | build-frontend build-backend ## Build binary
 
 .PHONY: build-frontend
 build-frontend: ## Build frontend
-	$Q cd frontend && npm ci && npm run build
+	$Q cd frontend && pnpm install --frozen-lockfile && pnpm run build
 
 .PHONY: build-backend
 build-backend: ## Build backend
-	$Q $(go) build -ldflags '$(LDFLAGS)' -o .
+	$Q GOOS=$(GOOS) GOARCH=$(GOARCH) $(go) build -ldflags '$(LDFLAGS)' -o .
 
 .PHONY: test
 test: | test-frontend test-backend ## Run all tests
 
 .PHONY: test-frontend
 test-frontend: ## Run frontend tests
+	$Q cd frontend && pnpm install --frozen-lockfile && pnpm run typecheck
 
 .PHONY: test-backend
 test-backend: ## Run backend tests
@@ -31,7 +34,7 @@ lint: lint-frontend lint-backend ## Run all linters
 
 .PHONY: lint-frontend
 lint-frontend: ## Run frontend linters
-	$Q cd frontend && npm ci && npm run lint
+	$Q cd frontend && pnpm install --frozen-lockfile && pnpm run lint
 
 .PHONY: lint-backend
 lint-backend: | $(golangci-lint) ## Run backend linters

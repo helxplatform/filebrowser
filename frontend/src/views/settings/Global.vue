@@ -53,7 +53,7 @@
             <a
               class="link"
               target="_blank"
-              href="https://filebrowser.org/configuration/custom-branding"
+              href="https://github.com/filebrowser/filebrowser/blob/master/docs/configuration.md#custom-branding"
               >{{ t("settings.documentation") }}</a
             >
           </i18n-t>
@@ -192,7 +192,7 @@
             <a
               class="link"
               target="_blank"
-              href="https://filebrowser.org/configuration/command-runner"
+              href="https://github.com/filebrowser/filebrowser/blob/master/docs/configuration.md#command-runner"
               >{{ t("settings.documentation") }}</a
             >
           </i18n-t>
@@ -282,7 +282,7 @@ const formattedChunkSize = computed({
 // Define funcs
 const capitalize = (name: string, where: string | RegExp = "_") => {
   if (where === "caps") where = /(?=[A-Z])/;
-  let split = name.split(where);
+  const split = name.split(where);
   name = "";
 
   for (let i = 0; i < split.length; i++) {
@@ -294,7 +294,7 @@ const capitalize = (name: string, where: string | RegExp = "_") => {
 
 const save = async () => {
   if (settings.value === null) return false;
-  let newSettings: ISettings = {
+  const newSettings: ISettings = {
     ...settings.value,
     shell:
       settings.value?.shell
@@ -376,7 +376,7 @@ onMounted(async () => {
   try {
     layoutStore.loading = true;
     const original: ISettings = await api.get();
-    let newSettings: ISettings = { ...original, commands: {} };
+    const newSettings: ISettings = { ...original, commands: {} };
 
     const keys = Object.keys(original.commands) as Array<keyof SettingsCommand>;
     for (const key of keys) {

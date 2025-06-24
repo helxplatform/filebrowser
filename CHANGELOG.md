@@ -2,6 +2,78 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.33.0](https://github.com/filebrowser/filebrowser/compare/v2.32.3...v2.33.0) (2025-06-18)
+
+
+### Features
+
+* improved docker image volumes and permissions ([#5160](https://github.com/filebrowser/filebrowser/issues/5160)) ([2e26393](https://github.com/filebrowser/filebrowser/commit/2e26393a022df0eaa9e08727407aba8b997aa728))
+
+### [2.32.3](https://github.com/filebrowser/filebrowser/compare/v2.32.2...v2.32.3) (2025-06-17)
+
+### [2.32.2](https://github.com/filebrowser/filebrowser/compare/v2.32.1...v2.32.2) (2025-06-17)
+
+
+### Features
+
+* updated for project File Browser ([#5159](https://github.com/filebrowser/filebrowser/issues/5159)) ([c34c0af](https://github.com/filebrowser/filebrowser/commit/c34c0afecf3242b16ad5d5584cd90a6ad323361c))
+
+### [2.32.1](https://github.com/filebrowser/filebrowser/compare/v2.32.0...v2.32.1) (2025-06-16)
+
+
+### Features
+
+* add Vietnamese translation ([#3840](https://github.com/filebrowser/filebrowser/issues/3840)) ([56b80b6](https://github.com/filebrowser/filebrowser/commit/56b80b6d9b4710538765ba7df5da1f03898f6b81))
+* improve pt-br translations with new keys and refinements ([#4903](https://github.com/filebrowser/filebrowser/issues/4903)) ([a882fb6](https://github.com/filebrowser/filebrowser/commit/a882fb6c85ab6ccc845ed0bf3908d8e5e60ce346))
+* update translation ko.json ([#3852](https://github.com/filebrowser/filebrowser/issues/3852)) ([d9ebd65](https://github.com/filebrowser/filebrowser/commit/d9ebd65ffcf9b2166fec708d51849796d12b16e0))
+
+
+### Bug Fixes
+
+* err shadowing lint ([c606a01](https://github.com/filebrowser/filebrowser/commit/c606a01a2d20932fb32ee896234d57631f8c47e4))
+* generate random admin password on quick setup ([a46acba](https://github.com/filebrowser/filebrowser/commit/a46acba5f92ee044661880d6ae349e289d984328)), closes [#3646](https://github.com/filebrowser/filebrowser/issues/3646)
+* imports lint ([54b91b8](https://github.com/filebrowser/filebrowser/commit/54b91b8ff0b8ee1f02f72425ab97d27a5d942fc3))
+* set videojs locale ([#3742](https://github.com/filebrowser/filebrowser/issues/3742)) ([71a8f56](https://github.com/filebrowser/filebrowser/commit/71a8f5662c207e3cd4ee714a5b5a961121f510cd))
+
+
+### Build
+
+* **deps-dev:** bump vite from 6.0.11 to 6.1.6 in /frontend ([#3886](https://github.com/filebrowser/filebrowser/issues/3886)) ([5355629](https://github.com/filebrowser/filebrowser/commit/5355629fd1e7bd85ee3222fca22da899ba23ea95))
+* **deps:** bump golang.org/x/crypto from 0.31.0 to 0.35.0 ([#3865](https://github.com/filebrowser/filebrowser/issues/3865)) ([0ba9505](https://github.com/filebrowser/filebrowser/commit/0ba9505a19cb369653fc9f8260dc02fcc6587629))
+* **deps:** bump golang.org/x/net from 0.33.0 to 0.38.0 ([#3869](https://github.com/filebrowser/filebrowser/issues/3869)) ([cfea84f](https://github.com/filebrowser/filebrowser/commit/cfea84fd5e7ec9c1d2366293e5db12baaa4e3a81))
+* **deps:** bump vue-i18n from 11.0.1 to 11.1.2 in /frontend ([#3786](https://github.com/filebrowser/filebrowser/issues/3786)) ([35d1c09](https://github.com/filebrowser/filebrowser/commit/35d1c092434b80b22c89a614a02122e9f5965b39))
+
+## [2.32.0](https://github.com/filebrowser/filebrowser/compare/v2.31.2...v2.32.0) (2025-01-31)
+
+
+### Features
+
+* create user on proxy authentication if user does not exist ([#3569](https://github.com/filebrowser/filebrowser/issues/3569)) ([209acf2](https://github.com/filebrowser/filebrowser/commit/209acf2429b06e2e8d78218937c59fd7e7edd1be))
+
+
+### Bug Fixes
+
+* add proper healthcheck for S6 containers ([#3691](https://github.com/filebrowser/filebrowser/issues/3691)) ([045064f](https://github.com/filebrowser/filebrowser/commit/045064f8b8bf9f86058e877448085e38da8b3f2e))
+* disk usage refreshing ([#3692](https://github.com/filebrowser/filebrowser/issues/3692)) ([bbdd313](https://github.com/filebrowser/filebrowser/commit/bbdd313705b8d253f0c47ad717a6e47b2f46e719))
+* Fix user creation on proxy auth ([#3666](https://github.com/filebrowser/filebrowser/issues/3666)) ([5300d00](https://github.com/filebrowser/filebrowser/commit/5300d00d2e7dbb80a252aff57e100113f02506c3))
+* prompts disappearing on copy / move / upload ([#3537](https://github.com/filebrowser/filebrowser/issues/3537)) ([d1c84a8](https://github.com/filebrowser/filebrowser/commit/d1c84a84123c77dede05c023b3697a432b56122c))
+
+
+### Refactorings
+
+* Fix eslint warnings ([#3698](https://github.com/filebrowser/filebrowser/issues/3698)) ([0201f9c](https://github.com/filebrowser/filebrowser/commit/0201f9c5c4dd2a4d5a3503e59cdb8045e8d3a91f)), closes [#3407](https://github.com/filebrowser/filebrowser/issues/3407)
+
+
+### Build
+
+* **deps:** bump cross-spawn from 7.0.3 to 7.0.6 in /tools ([#3601](https://github.com/filebrowser/filebrowser/issues/3601)) ([25372ed](https://github.com/filebrowser/filebrowser/commit/25372edb5c0e616e82b76b5f523633af57d347e0))
+* **deps:** bump github.com/golang-jwt/jwt/v4 from 4.5.0 to 4.5.1 ([#3574](https://github.com/filebrowser/filebrowser/issues/3574)) ([2fdea73](https://github.com/filebrowser/filebrowser/commit/2fdea73430011846276a1cda52458f1d670f5ea7))
+* **deps:** bump golang.org/x/crypto from 0.26.0 to 0.31.0 ([#3634](https://github.com/filebrowser/filebrowser/issues/3634)) ([e92dbb4](https://github.com/filebrowser/filebrowser/commit/e92dbb4bb8b7894264fbf0a48a641712c3b68766))
+* **deps:** bump golang.org/x/net from 0.23.0 to 0.33.0 ([#3712](https://github.com/filebrowser/filebrowser/issues/3712)) ([1194cfe](https://github.com/filebrowser/filebrowser/commit/1194cfe0097a70399c1f06cf0f514b9d70fa463c))
+* **deps:** bump vue-i18n from 9.10.2 to 9.14.2 in /frontend ([#3618](https://github.com/filebrowser/filebrowser/issues/3618)) ([0659594](https://github.com/filebrowser/filebrowser/commit/065959451d3ba12019c6151274aa4e6904cdca99))
+* fix go releaser ([ba797cd](https://github.com/filebrowser/filebrowser/commit/ba797cda3135eddb9b7165dc5ceb932399cb54df))
+* update to node 22 and pnpm ([#3616](https://github.com/filebrowser/filebrowser/issues/3616)) ([d51a343](https://github.com/filebrowser/filebrowser/commit/d51a3438201274a1b826be1b775ca1035ade20c5))
+
 ### [2.31.2](https://github.com/filebrowser/filebrowser/compare/v2.31.1...v2.31.2) (2024-10-03)
 
 

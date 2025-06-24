@@ -62,7 +62,8 @@ const initVideoPlayer = async () => {
     const languagePack = await (
       languageImports[lang] || languageImports.en
     )?.();
-    videojs.addLanguage("videoPlayerLocal", languagePack.default);
+    const code = languageImports[lang] ? lang : "en";
+    videojs.addLanguage(code, languagePack.default);
     sourceType.value = "";
 
     //
@@ -70,14 +71,19 @@ const initVideoPlayer = async () => {
 
     const srcOpt = { sources: { src: props.source, type: sourceType.value } };
     //Supporting localized language display.
-    const langOpt = { language: "videoPlayerLocal" };
+    const langOpt = { language: code };
     // support for playback at different speeds.
     const playbackRatesOpt = { playbackRates: [0.5, 1, 1.5, 2, 2.5, 3] };
-    let options = getOptions(props.options, langOpt, srcOpt, playbackRatesOpt);
+    const options = getOptions(
+      props.options,
+      langOpt,
+      srcOpt,
+      playbackRatesOpt
+    );
     player.value = videojs(videoPlayer.value!, options, () => {});
 
     // TODO: need to test on mobile
-    // @ts-ignore
+    // @ts-expect-error no ts definition for mobileUi
     player.value!.mobileUi();
   } catch (error) {
     console.error("Error initializing video player:", error);
@@ -120,7 +126,7 @@ const subLabel = (subUrl: string) => {
   let url: URL;
   try {
     url = new URL(subUrl);
-  } catch (_) {
+  } catch {
     // treat it as a relative url
     // we only need this for filename
     url = new URL(subUrl, window.location.origin);
