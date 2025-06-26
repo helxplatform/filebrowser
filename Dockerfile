@@ -15,9 +15,12 @@ RUN apt-get update && \
     ca-certificates \
     media-types \
     wget \
-    tini \
-    libnss-ldap && \
-  apt-get clean
+    tini
+
+# Libnss-ldap removed on bookworm, manually install from archive
+RUN wget https://ftp.debian.org/debian/pool/main/libn/libnss-ldap/libnss-ldap_265-6_amd64.deb && \
+  wget https://ftp.debian.org/debian/pool/main/o/openldap/libldap-2.4-2_2.4.47+dfsg-3+deb10u7_amd64.deb && \
+  apt-get install -y "./libldap-2.4-2_2.4.47+dfsg-3+deb10u7_amd64.deb" "./libnss-ldap_265-6_amd64.deb"
 
 
 HEALTHCHECK --start-period=2s --interval=5s --timeout=3s CMD /healthcheck.sh || exit 1
