@@ -1,12 +1,14 @@
-FROM debian:bookworm-slim
+FROM debian:bullseye-slim
 
 # Copy files and set permissions
 COPY filebrowser /bin/filebrowser
-COPY filebrowser /filebrowser
-COPY docker/common/ /
-COPY docker/debian/ /
+RUN chmod +x /bin/filebrowser && cp /bin/filebrowser /filebrowser
 
-RUN chmod +x /bin/filebrowser /filebrowser /healthcheck.sh /init.sh
+COPY docker/common/ /tmp/common/
+COPY docker/debian/ /tmp/debian/
+RUN find /tmp/common /tmp/debian -type f -name "*.sh" -exec chmod +x {} \; && \
+  cp -r /tmp/common/* / && \
+  cp -r /tmp/debian/* /
 
 # Update package list and install required packages
 RUN apt-get update && \
@@ -15,7 +17,8 @@ RUN apt-get update && \
     ca-certificates \
     media-types \
     wget \
-    tini
+    tini \
+    trash-cli
 
 # Libnss-ldap removed on bookworm, manually install from archive
 RUN wget https://ftp.debian.org/debian/pool/main/libn/libnss-ldap/libnss-ldap_265-6_amd64.deb && \

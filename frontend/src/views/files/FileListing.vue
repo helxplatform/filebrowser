@@ -32,11 +32,17 @@
             show="copy"
           />
           <action
-            v-if="headerButtons.move"
+            v-if="headerButtons.move && !headerButtons.restoreTrash"
             id="move-button"
             icon="forward"
             :label="t('buttons.moveFile')"
             show="move"
+          />
+          <action
+            v-if="headerButtons.restoreTrash"
+            icon="restore_from_trash"
+            :label="t('buttons.restore')"
+            show="restore-trash"
           />
           <action
             v-if="headerButtons.delete"
@@ -104,10 +110,16 @@
         show="copy"
       />
       <action
-        v-if="headerButtons.move"
+        v-if="headerButtons.move && !headerButtons.restoreTrash"
         icon="forward"
         :label="t('buttons.moveFile')"
         show="move"
+      />
+      <action
+        v-if="headerButtons.restoreTrash"
+        icon="restore_from_trash"
+        :label="t('buttons.restore')"
+        show="restore-trash"
       />
       <action
         v-if="headerButtons.delete"
@@ -412,6 +424,10 @@ const headerButtons = computed(() => {
     share: fileStore.selectedCount === 1 && authStore.user?.perm.share,
     move: fileStore.selectedCount > 0 && authStore.user?.perm.rename,
     copy: fileStore.selectedCount > 0 && authStore.user?.perm.create,
+    restoreTrash:
+      fileStore.selectedCount > 0 &&
+      authStore.user?.perm.rename &&
+      /.*\/\.?Trash(-[0-9]+|\/[0-9]+)\/files\/.*/.test(fileStore?.req?.path || "")
   };
 });
 

@@ -33,9 +33,23 @@ if [ -f "/database.db" ]; then
   echo ""
 fi
 
+if [ ! -f "/database/filebrowser.db" ]; then
+  filebrowser config -d /database/filebrowser.db init
+  ln -s /database/filebrowser.db /filebrowser.db
+  filebrowser users add admin admin --perm.admin
+fi
+
 # Ensure configuration exists
 if [ ! -f "/config/settings.json" ]; then
   cp -a /defaults/settings.json /config/settings.json
+fi
+
+SETUP_TRASH="/setup-trash.sh"
+if [ -x $SETUP_TRASH ]; then
+  echo "Running $SETUP_TRASH..."
+  "$SETUP_TRASH"
+else
+  echo "$SETUP_TRASH not found or not executable, skipping..."
 fi
 
 exec "$@"

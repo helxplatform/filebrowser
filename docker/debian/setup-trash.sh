@@ -1,0 +1,1 @@
+/filebrowser cmds add before_delete "/trash-or-delete.sh \$FILE"

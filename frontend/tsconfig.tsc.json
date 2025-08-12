@@ -8,6 +8,7 @@
     "src/components/prompts/Delete.vue",
     "src/components/prompts/FileList.vue",
     "src/components/prompts/Rename.vue",
+    "src/components/prompts/RestoreTrash.vue",
     "src/components/prompts/Share.vue",
     "src/components/prompts/UploadFiles.vue"
   ]

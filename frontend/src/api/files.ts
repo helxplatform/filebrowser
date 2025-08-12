@@ -217,3 +217,10 @@ export async function usage(url: string) {
 
   return await res.json();
 }
+
+export async function restoreFromTrash(file: ResourceItem) {
+  const res = await fetchURL("/api/restore_trash" + file.path, {
+    method: "POST"
+  });
+  return await res.json();
+}
