@@ -73,6 +73,8 @@ func NewHandler(
 
 	api.PathPrefix("/usage").Handler(monkey(diskUsage, "/api/usage")).Methods("GET")
 
+	api.PathPrefix("/restore_trash").Handler(monkey(restoreTrashHandler, "/api/restore_trash")).Methods("POST")
+
 	api.Path("/shares").Handler(monkey(shareListHandler, "/api/shares")).Methods("GET")
 	api.PathPrefix("/share").Handler(monkey(shareGetsHandler, "/api/share")).Methods("GET")
 	api.PathPrefix("/share").Handler(monkey(sharePostHandler, "/api/share")).Methods("POST")
