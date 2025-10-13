@@ -427,7 +427,7 @@ const headerButtons = computed(() => {
     restoreTrash:
       fileStore.selectedCount > 0 &&
       authStore.user?.perm.rename &&
-      /.*\/\.?Trash(-[0-9]+|\/[0-9]+)\/files\/.*/.test(fileStore?.req?.path || "")
+      /.*\/\.?Trash(-[0-9]*|\/[0-9]*)\/files\/.*/.test(fileStore?.req?.path || "")
   };
 });
 
