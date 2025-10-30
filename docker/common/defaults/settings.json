@@ -3,7 +3,7 @@
   "baseURL": "",
   "address": "",
   "log": "stdout",
-  "database": "$HOME/.filebrowser/filebrowser.db",
+  "database": "/database/filebrowser.db",
   "root": "/srv",
   "hooks": {
     "before_delete": [
