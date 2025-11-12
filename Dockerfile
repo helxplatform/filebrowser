@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:trixie-slim
 
 USER root
 
@@ -23,7 +23,6 @@ RUN ls -l && \
        gnupg2 \
        mailcap \
        binutils \
-       libnss-ldap/bullseye \
        ldap-utils \
        nscd \
        procps \
@@ -33,6 +32,11 @@ RUN ls -l && \
        less \
        vim \
        trash-cli
+
+RUN wget https://ftp.debian.org/debian/pool/main/libn/libnss-ldap/libnss-ldap_265-6_amd64.deb && \
+  wget https://ftp.debian.org/debian/pool/main/o/openldap/libldap-2.4-2_2.4.57+dfsg-3+deb11u1_amd64.deb && \
+  apt-get install -y "./libldap-2.4-2_2.4.57+dfsg-3+deb11u1_amd64.deb" "./libnss-ldap_265-6_amd64.deb"
+
 
 HEALTHCHECK --start-period=2s --interval=5s --timeout=3s CMD /healthcheck.sh || exit 1
 
