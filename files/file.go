@@ -7,6 +7,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"hash"
 	"image"
 	"io"
@@ -21,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/moby/sys/mountinfo"
 	"github.com/spf13/afero"
 
 	fbErrors "github.com/filebrowser/filebrowser/v2/errors"
@@ -38,22 +40,23 @@ var (
 // FileInfo describes a file.
 type FileInfo struct {
 	*Listing
-	Fs         afero.Fs          `json:"-"`
-	Path       string            `json:"path"`
-	Name       string            `json:"name"`
-	Size       int64             `json:"size"`
-	Extension  string            `json:"extension"`
-	ModTime    time.Time         `json:"modified"`
-	Mode       os.FileMode       `json:"mode"`
-	IsDir      bool              `json:"isDir"`
-	IsSymlink  bool              `json:"isSymlink"`
-	Type       string            `json:"type"`
-	Subtitles  []string          `json:"subtitles,omitempty"`
-	Content    string            `json:"content,omitempty"`
-	Checksums  map[string]string `json:"checksums,omitempty"`
-	Token      string            `json:"token,omitempty"`
-	currentDir []os.FileInfo     `json:"-"`
-	Resolution *ImageResolution  `json:"resolution,omitempty"`
+	Fs          afero.Fs          `json:"-"`
+	Path        string            `json:"path"`
+	Name        string            `json:"name"`
+	Size        int64             `json:"size"`
+	Extension   string            `json:"extension"`
+	ModTime     time.Time         `json:"modified"`
+	Mode        os.FileMode       `json:"mode"`
+	HasTrashDir bool              `json:"hasTrashDir"`
+	IsDir       bool              `json:"isDir"`
+	IsSymlink   bool              `json:"isSymlink"`
+	Type        string            `json:"type"`
+	Subtitles   []string          `json:"subtitles,omitempty"`
+	Content     string            `json:"content,omitempty"`
+	Checksums   map[string]string `json:"checksums,omitempty"`
+	Token       string            `json:"token,omitempty"`
+	currentDir  []os.FileInfo     `json:"-"`
+	Resolution  *ImageResolution  `json:"resolution,omitempty"`
 }
 
 // FileOptions are the options when getting a file info.
@@ -103,6 +106,89 @@ func NewFileInfo(opts *FileOptions) (*FileInfo, error) {
 	return file, err
 }
 
+func FindMountPoint(path string) (string, error) {
+	resolvedPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", err
+	}
+
+	absPath, err := filepath.Abs(resolvedPath)
+	if err != nil {
+		return "", err
+	}
+
+	mounts, err := mountinfo.GetMounts(nil)
+	if err != nil {
+		return "", nil
+	}
+
+	var bestMatch *mountinfo.Info
+	for _, m := range mounts {
+		if strings.HasPrefix(absPath, m.Mountpoint) {
+			if bestMatch == nil || len(m.Mountpoint) > len(bestMatch.Mountpoint) {
+				bestMatch = m
+			}
+		}
+	}
+
+	if bestMatch != nil {
+		return bestMatch.Mountpoint, nil
+	}
+
+	return "", fmt.Errorf("No mount point found for '%s'", path)
+}
+
+func GetAssociatedTrashDir(fs afero.Fs, path string) (*string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		homeDir = filepath.Join("/home", os.Getenv("USER"))
+	}
+	xdgDataHome := os.Getenv("XDG_DATA_HOME")
+	if xdgDataHome == "" {
+		xdgDataHome = filepath.Join(homeDir, ".local", "share")
+	}
+
+	// basePathFs, ok := fs.(*afero.BasePathFs)
+	// var realPath string
+	// if !ok {
+	// 	return nil, fmt.Errorf("Afero FS is not an OsFS. Can't find base path for filesystem.")
+	// }
+	// relPath := strings.TrimPrefix(path, "/")
+	// realPath = afero.FullBaseFsPath(basePathFs, relPath)
+
+	var realPath string
+
+	if realPathFs, ok := fs.(interface {
+		RealPath(name string) (string, error)
+	}); ok {
+		rp, err := realPathFs.RealPath(path)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get real path for %q using %T: %v", path, fs, err)
+		}
+		realPath = rp
+	} else {
+		return nil, fmt.Errorf("Filesystem of type %T does not support RealPath for %q", fs, path)
+	}
+
+	mountPoint, err := FindMountPoint(realPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var trashPath string
+	if mountPoint == homeDir {
+		trashPath = filepath.Join(xdgDataHome, "Trash")
+	} else {
+		trashPath = filepath.Join(mountPoint, ".Trash")
+	}
+
+	if info, err := os.Stat(trashPath); err == nil && info.IsDir() {
+		return &trashPath, nil
+	}
+
+	return nil, nil
+}
+
 func stat(opts *FileOptions) (*FileInfo, error) {
 	var file *FileInfo
 
@@ -111,17 +197,22 @@ func stat(opts *FileOptions) (*FileInfo, error) {
 		if err != nil {
 			return nil, err
 		}
+		trashDir, err := GetAssociatedTrashDir(opts.Fs, opts.Path)
+		if err != nil {
+			return nil, err
+		}
 		file = &FileInfo{
-			Fs:        opts.Fs,
-			Path:      opts.Path,
-			Name:      info.Name(),
-			ModTime:   info.ModTime(),
-			Mode:      info.Mode(),
-			IsDir:     info.IsDir(),
-			IsSymlink: IsSymlink(info.Mode()),
-			Size:      info.Size(),
-			Extension: filepath.Ext(info.Name()),
-			Token:     opts.Token,
+			Fs:          opts.Fs,
+			Path:        opts.Path,
+			Name:        info.Name(),
+			ModTime:     info.ModTime(),
+			Mode:        info.Mode(),
+			HasTrashDir: trashDir != nil,
+			IsDir:       info.IsDir(),
+			IsSymlink:   IsSymlink(info.Mode()),
+			Size:        info.Size(),
+			Extension:   filepath.Ext(info.Name()),
+			Token:       opts.Token,
 		}
 	}
 
@@ -147,16 +238,22 @@ func stat(opts *FileOptions) (*FileInfo, error) {
 		return file, nil
 	}
 
+	trashDir, err := GetAssociatedTrashDir(opts.Fs, opts.Path)
+	if err != nil {
+		return nil, err
+	}
+
 	file = &FileInfo{
-		Fs:        opts.Fs,
-		Path:      opts.Path,
-		Name:      info.Name(),
-		ModTime:   info.ModTime(),
-		Mode:      info.Mode(),
-		IsDir:     info.IsDir(),
-		Size:      info.Size(),
-		Extension: filepath.Ext(info.Name()),
-		Token:     opts.Token,
+		Fs:          opts.Fs,
+		Path:        opts.Path,
+		Name:        info.Name(),
+		ModTime:     info.ModTime(),
+		Mode:        info.Mode(),
+		HasTrashDir: trashDir != nil,
+		IsDir:       info.IsDir(),
+		Size:        info.Size(),
+		Extension:   filepath.Ext(info.Name()),
+		Token:       opts.Token,
 	}
 
 	return file, nil
@@ -421,17 +518,23 @@ func (i *FileInfo) readListing(checker rules.Checker, readHeader bool) error {
 			}
 		}
 
+		trashDir, err := GetAssociatedTrashDir(i.Fs, i.Path)
+		if err != nil {
+			return err
+		}
+
 		file := &FileInfo{
-			Fs:         i.Fs,
-			Name:       name,
-			Size:       f.Size(),
-			ModTime:    f.ModTime(),
-			Mode:       f.Mode(),
-			IsDir:      f.IsDir(),
-			IsSymlink:  isSymlink,
-			Extension:  filepath.Ext(name),
-			Path:       fPath,
-			currentDir: dir,
+			Fs:          i.Fs,
+			Name:        name,
+			Size:        f.Size(),
+			ModTime:     f.ModTime(),
+			Mode:        f.Mode(),
+			HasTrashDir: trashDir != nil,
+			IsDir:       f.IsDir(),
+			IsSymlink:   isSymlink,
+			Extension:   filepath.Ext(name),
+			Path:        fPath,
+			currentDir:  dir,
 		}
 
 		if !file.IsDir && strings.HasPrefix(mime.TypeByExtension(file.Extension), "image/") {

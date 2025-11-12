@@ -58,9 +58,10 @@ func getTrashedFilePath(trashFile *files.FileInfo) (string, string, error) {
 	return decodedPath, trashedDate, nil
 }
 
-func getTrashedFiles() ([]TrashFile, error) {
+func getTrashedFiles(trashDir string) ([]TrashFile, error) {
 	var trashFiles []TrashFile
-	cmd := exec.Command("trash-list")
+
+	cmd := exec.Command("trash-list", "--trash-dir", trashDir)
 	stdout, err := cmd.Output()
 	if err != nil {
 		return nil, err
@@ -92,36 +93,30 @@ func getTrashedFiles() ([]TrashFile, error) {
 }
 
 func restoreFromTrash(trashFile *files.FileInfo) (string, error) {
-	originalPath, trashedDate, err := getTrashedFilePath(trashFile)
+	// .trashinfo omits the mount point of the trashed file's original path for some reason.
+	originalPathNoMount, trashedDate, err := getTrashedFilePath(trashFile)
 	if err != nil {
 		return "", err
 	}
 
-	// We first have to list all trashed files in order to recover the absolute original path of the trashed file,
-	// since trashinfo uses relative paths and there's no way to restore the file using trash-cli unless
-	// trash-restore is executed from the original directory that the file was trashed from.
-	trashFiles, err := getTrashedFiles()
+	mountDir, err := files.FindMountPoint(trashFile.RealPath())
 	if err != nil {
 		return "", err
 	}
 
-	var absoluteOriginalPath string
-	for _, trashFile := range trashFiles {
-		// NOTE: We use a substring match on the path + matching trash dates rather than simply looking for path equality
-		// because for some reason trash-restore includes the absolute path (including the volume) whereas .trashinfo
-		// omits the volume path in its `Path` value, making it relative.
-		if strings.Contains(trashFile.Path, originalPath) && trashFile.TrashedDate == trashedDate {
-			absoluteOriginalPath = trashFile.Path
-			break
-		}
+	absoluteOriginalPath := filepath.Join(mountDir, originalPathNoMount)
+
+	trashDir, err := files.GetAssociatedTrashDir(trashFile.Fs, trashFile.Path)
+	if err != nil {
+		return "", err
+	}
+	if trashDir == nil {
+		return "", fmt.Errorf("No trash directory exists for the file '%s'.", trashFile.RealPath())
 	}
 
-	cmd := exec.Command("sh", "-c", "trash-restore")
-	if trashFile.IsDir {
-		cmd.Dir = absoluteOriginalPath
-	} else {
-		cmd.Dir = filepath.Dir(absoluteOriginalPath)
-	}
+	cmd := exec.Command("sh", "-c", `trash-restore --trash-dir="$1"`, "trash-restore", *trashDir)
+	// Trash-restore must be executed under the directory of the original path of the target trash item.
+	cmd.Dir = filepath.Dir(absoluteOriginalPath)
 
 	stdinPipe, err := cmd.StdinPipe()
 	if err != nil {
@@ -178,8 +173,12 @@ func restoreFromTrash(trashFile *files.FileInfo) (string, error) {
 					continue
 				}
 
+				date := fmt.Sprintf("%sT%s", fields[1], fields[2])
 				path := strings.Join(fields[3:], " ")
-				if strings.TrimSpace(path) == strings.TrimSpace(absoluteOriginalPath) {
+				matchesPath := strings.TrimSpace(path) == strings.TrimSpace(absoluteOriginalPath)
+				// Needs to match date as well in the edge case that there are naming conflicts
+				matchesDate := strings.TrimSpace(date) == strings.TrimSpace(trashedDate)
+				if matchesPath && matchesDate {
 					restoreId = &id
 					break
 				}
@@ -208,7 +207,7 @@ func restoreFromTrash(trashFile *files.FileInfo) (string, error) {
 		return "", err
 	}
 
-	return originalPath, nil
+	return originalPathNoMount, nil
 }
 
 var restoreTrashHandler = withUser(func(w http.ResponseWriter, r *http.Request, d *data) (int, error) {

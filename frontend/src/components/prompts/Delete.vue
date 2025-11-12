@@ -7,6 +7,16 @@
       <p v-else>
         {{ $t("prompts.deleteMessageMultiple", { count: selectedCount }) }}
       </p>
+      <p v-if="this.selectedWithoutTrashDirs.length === this.selected.length">
+        <b>Warning:</b> {{ this.selectedCount === 1 ? "This item" : "These items" }} will be permanently deleted.
+      </p>
+      <!-- This probably shouldn't ever occur since you can't delete files from diff dirs at the same time. -->
+      <p v-else-if="this.selectedWithoutTrashDirs.length > 0">
+        <b>Warning:</b> the following items will be permanently deleted:
+        <ul>
+          <li v-for="item in this.selectedWithoutTrashDirs" :key="item.path">{{ item.name }}</li>
+        </ul>
+      </p>
     </div>
     <div class="card-action">
       <button
@@ -51,6 +61,9 @@ export default {
       "currentPrompt",
     ]),
     ...mapWritableState(useFileStore, ["reload"]),
+    selectedWithoutTrashDirs() {
+      return this.selected.map((i) => this.req?.items[i]).filter((item) => !item.hasTrashDir)
+    }
   },
   methods: {
     ...mapActions(useLayoutStore, ["closeHovers"]),
