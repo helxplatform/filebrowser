@@ -4,10 +4,5 @@
   "address": "",
   "log": "stdout",
   "database": "/database/filebrowser.db",
-  "root": "/srv",
-  "hooks": {
-    "before_delete": [
-      "trash-put {{ .Files }} && exit 1"
-    ]
-  }
+  "root": "/srv"
 }

@@ -12,6 +12,14 @@ SETUP_TRASH="/setup-trash.sh"
 
 echo "init.sh script starting . . ."
 
+# Detect if trash-cli functionality is enabled
+TRASH_BINS=$(/detect-trash-bins.sh)
+if [ -n "$TRASH_BINS" ]; then
+    TRASH_CLI_ENABLED=true
+else
+    TRASH_CLI_ENABLED=false
+fi
+
 # Set ROOT_DIR
 if [ -d /shared ]; then
   export ROOT_DIR="/home/$USER"
@@ -59,13 +67,19 @@ if [ ! -f "$DB_PATH" ]; then
     echo "[init.sh]: Filebrowser.db not found. Initializing Filebrowser database in $DB_DIR_PATH"
     /filebrowser -d "$DB_PATH" -c "$CONFIG_PATH" config init --auth.method noauth
     echo "[init.sh]: RC from config init --noauth = [$?]"
-    if [ -x $SETUP_TRASH ]; then
-        echo "[init.sh]: Running $SETUP_TRASH..."
-        "$SETUP_TRASH"
-        echo "[init.sh]: RC from $SETUP_TRASH = [$?]"
+
+    if [ "$TRASH_CLI_ENABLED" = true ]; then
+        if [ -x $SETUP_TRASH ]; then
+            echo "[init.sh]: Running $SETUP_TRASH..."
+            "$SETUP_TRASH"
+            echo "[init.sh]: RC from $SETUP_TRASH = [$?]"
+        else
+            echo "[init.sh]: $SETUP_TRASH not found or not executable, skipping..."
+        fi
     else
-        echo "[init.sh]: $SETUP_TRASH not found or not executable, skipping..."
+        echo "[init.sh]: No trash bins detected on mounts. Skipping setup for trash-cli functionality..."
     fi
+
     /filebrowser -d "$DB_PATH" -c "$CONFIG_PATH" users add admin admin --perm.admin
     echo "[init.sh]: RC from users add admin admin = [$?]"
 else
