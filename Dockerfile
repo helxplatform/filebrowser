@@ -1,33 +1,48 @@
-# Use Go base image
-FROM golang:1.24-bullseye
+FROM debian:trixie-slim
 
-#RUN apt-get update && apt-get install -y --no-install-recommends gnupg ca-certificates
-RUN apt-get update
+USER root
 
+# Set filebrowser env vars:
+ENV FB_AUTH_METHOD="noauth"
+ENV FB_NOAUTH=true
 
-# Install Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs
-
-# Verify Node.js installation
-RUN node -v && npm -v
+# Copy the filebrowser binary, scripts, and settings
+COPY --chmod=0755 filebrowser /
+COPY --chmod=0755 docker/debian/ /
+COPY --chmod=0755 docker/common/healthcheck.sh /
+COPY --chmod=0666 docker/common/defaults/settings.json /
 
 # Update package list and install required packages
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates mailcap curl jq libnss-ldap
+RUN ls -l && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+       ca-certificates \
+       media-types \
+       wget \
+       gnupg2 \
+       mailcap \
+       binutils \
+       ldap-utils \
+       nscd \
+       procps \
+       curl \
+       jq \
+       tini \
+       less \
+       vim \
+       trash-cli
 
-WORKDIR /build
-COPY . .
+RUN wget https://ftp.debian.org/debian/pool/main/libn/libnss-ldap/libnss-ldap_265-6_amd64.deb && \
+  wget https://ftp.debian.org/debian/pool/main/o/openldap/libldap-2.4-2_2.4.57+dfsg-3+deb11u1_amd64.deb && \
+  apt-get install -y "./libldap-2.4-2_2.4.57+dfsg-3+deb11u1_amd64.deb" "./libnss-ldap_265-6_amd64.deb"
 
-RUN make build
 
-VOLUME /srv
-EXPOSE 80
-
-WORKDIR /
-COPY healthcheck.sh /healthcheck.sh
-COPY docker_config.json /.filebrowser.json
-RUN mv /build/filebrowser /filebrowser
-
-RUN chmod +x /healthcheck.sh  # Make the script executable
 HEALTHCHECK --start-period=2s --interval=5s --timeout=3s CMD /healthcheck.sh || exit 1
 
-ENTRYPOINT [ "/filebrowser" ]
+VOLUME /srv /database
+
+EXPOSE 80
+
+ENTRYPOINT [ "tini", "--", "/init.sh" ]
+CMD [ "/filebrowser", "--root=$ROOT_DIR", "--address=0.0.0.0", "--port=8080", "-d=$HOME/.filebrowser/filebrowser.db", "-c=/settings.json" ]

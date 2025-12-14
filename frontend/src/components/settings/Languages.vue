@@ -13,7 +13,7 @@ export default {
   name: "languages",
   props: ["locale"],
   data() {
-    let dataObj = {};
+    const dataObj = {};
     const locales = {
       he: "עברית",
       hu: "Magyar",
@@ -38,6 +38,7 @@ export default {
       "sv-se": "Swedish (Sweden)",
       tr: "Türkçe",
       uk: "Українська",
+      vi: "Tiếng Việt",
       "zh-cn": "中文 (简体)",
       "zh-tw": "中文 (繁體)",
     };

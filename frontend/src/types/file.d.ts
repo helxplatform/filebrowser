@@ -5,6 +5,7 @@ interface ResourceBase {
   extension: string;
   modified: string; // ISO 8601 datetime
   mode: number;
+  hasTrashDir: boolean
   isDir: boolean;
   isSymlink: boolean;
   type: ResourceType;
