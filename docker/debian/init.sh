@@ -192,18 +192,7 @@ main() {
         rebuild_database
     fi
 
-    # Expand arguments so $HOME and $USER are forced to resolve
-    # EXPANDED_ARGS=""
-    # for arg in "$@"; do
-    #     EXPANDED_ARGS="$EXPANDED_ARGS $(eval echo "$arg")"
-    # done
-
-    # echo "[init.sh::main]: Running [${EXPANDED_ARGS}]"
-    # exec sh -c "$EXPANDED_ARGS'
-
-    return 0
+    exec "$@"
 }
 
-
 main "$@"
-
