@@ -117,7 +117,7 @@ rebuild_database() {
 
     # Set up trash bin integration:
     if [ "$TRASH_CLI_ENABLED" != true ]; then
-        echo "[init.sh::rebuild_db]: No trash bins detected on mounts. Skipping setup of trash-cli functionality."
+        echo "[init.sh::rebuild_db]: No trash bins detected on mounts. Skipping setup of trash-cli."
     elif [ ! -x "$SETUP_TRASH" ]; then
         echo "[init.sh::rebuild_db]: $SETUP_TRASH either not found or not executable, skipping."
     else
@@ -128,9 +128,9 @@ rebuild_database() {
         fi
     fi
 
-    # Add bootstrap $USER as bootstrap db user. Default perms used (ie everything except admin and password lock)
+    # Add $USER as bootstrap db user. Default perms used (everything except admin and password lock)
     echo "[init.sh::rebuild_db]: Adding database bootstrap user [$USER]"
-    if ! /filebrowser -d "$DB_PATH" -c "$CONFIG_PATH" users add "$USER" create_random_password; then
+    if ! /filebrowser -d "$DB_PATH" -c "$CONFIG_PATH" users add "$USER" "$(create_random_password)"; then
         echo "[init.sh::rebuild_db]: Failed to add bootstrap user."
 	return 1
     fi
@@ -144,14 +144,13 @@ rebuild_database() {
 ##############################################################
 # main
 #
-#   1) Sets $ROOT_DIR
-#   2) Set up softlink to postgresql data
-#   3) Ensures a valid database and bootstrap user exist
-#   4) Expands script's input arguments ($ENTRYPOINT and $CMD)
-#   5) Execs filebrowser's entrypoint with it's command arguments
+#   1) Set up softlink to postgresql data
+#   2) Ensures a valid database and bootstrap user exist
+#   3) Expands script's input arguments ($ENTRYPOINT and $CMD)
+#   4) Execs filebrowser's entrypoint with it's command arguments
 #
 #   Parameters:
-#     - $@: All input arguments to the script (ie $ENTRYPOINT and $CMD)
+#     - $@: All input arguments to the script
 #
 #   Returns:
 #     - 0
@@ -166,13 +165,6 @@ main() {
         TRASH_CLI_ENABLED=true
     else
         TRASH_CLI_ENABLED=false
-    fi
-
-    # Set $ROOT_DIR
-    if [ -d /shared ]; then
-        export ROOT_DIR="/home/$USER"
-    else
-        export ROOT_DIR="/home"
     fi
 
     # Set up softlink to postgresql data
@@ -201,13 +193,13 @@ main() {
     fi
 
     # Expand arguments so $HOME and $USER are forced to resolve
-    EXPANDED_ARGS=""
-    for arg in "$@"; do
-        EXPANDED_ARGS="$EXPANDED_ARGS $(eval echo "$arg")"
-    done
+    # EXPANDED_ARGS=""
+    # for arg in "$@"; do
+    #     EXPANDED_ARGS="$EXPANDED_ARGS $(eval echo "$arg")"
+    # done
 
-    echo "[init.sh::main]: Running [${EXPANDED_ARGS}]"
-    exec sh -c "$EXPANDED_ARGS"
+    # echo "[init.sh::main]: Running [${EXPANDED_ARGS}]"
+    # exec sh -c "$EXPANDED_ARGS'
 
     return 0
 }
