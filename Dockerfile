@@ -13,8 +13,7 @@ COPY --chmod=0755 docker/common/healthcheck.sh /
 COPY --chmod=0666 docker/common/defaults/settings.json /
 
 # Update package list and install required packages
-RUN ls -l && \
-    apt-get update && \
+RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
        ca-certificates \
@@ -31,7 +30,9 @@ RUN ls -l && \
        tini \
        less \
        vim \
-       trash-cli
+       trash-cli && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN wget https://ftp.debian.org/debian/pool/main/libn/libnss-ldap/libnss-ldap_265-6_amd64.deb && \
   wget https://ftp.debian.org/debian/pool/main/o/openldap/libldap-2.4-2_2.4.57+dfsg-3+deb11u1_amd64.deb && \
