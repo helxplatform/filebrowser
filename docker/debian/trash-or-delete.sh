@@ -3,7 +3,7 @@
 
 TARGET_PATH="$1"
 
-if [[ "$TARGET_PATH" =~ .*/\.?Trash(-[0-9]*|\/[0-9]*)?/.* ]]; then
+if [[ "$TARGET_PATH" =~ .*/(\.?Trash(-[0-9]*|/[0-9]*)?|([A-Za-z0-9._-]+_)*trash)/.* ]]; then
   # Proceed with deletion as normal if the file is in a trash can.
   exit 0
 else
