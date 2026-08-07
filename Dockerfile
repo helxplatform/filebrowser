@@ -19,17 +19,11 @@ RUN apt-get update && \
        ca-certificates \
        media-types \
        wget \
-       gnupg2 \
-       mailcap \
-       binutils \
        ldap-utils \
-       nscd \
        procps \
        curl \
        jq \
        tini \
-       less \
-       vim \
        trash-cli && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
