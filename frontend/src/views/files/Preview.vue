@@ -66,8 +66,8 @@
               requestCredentials: true,
             }"
             :epubOptions="{
-              allowPopups: true,
-              allowScriptedContent: true,
+              allowPopups: false,
+              allowScriptedContent: false,
             }"
             @update:location="locationChange"
           />

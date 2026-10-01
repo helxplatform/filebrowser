@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"log"
+	"mime"
 	"net/http"
 	"net/url"
 	gopath "path"
@@ -64,6 +65,18 @@ func parseQueryAlgorithm(r *http.Request) (string, archiver.Writer, error) {
 	default:
 		return "", nil, errors.New("format not implemented")
 	}
+}
+
+// Inline file content is untrusted, so it is rendered in a sandbox with an
+// opaque origin. PDFs are exempt because browsers refuse to open sandboxed
+// PDFs; nosniff keeps a .pdf file from being rendered as anything else.
+func setUntrustedContentCSP(w http.ResponseWriter, name string) {
+	if mime.TypeByExtension(filepath.Ext(name)) == "application/pdf" {
+		w.Header().Set("Content-Security-Policy", `default-src 'self'; script-src 'none'; style-src 'unsafe-inline';`)
+		return
+	}
+	w.Header().Set("Content-Security-Policy",
+		`sandbox; default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline';`)
 }
 
 func setContentDisposition(w http.ResponseWriter, r *http.Request, file *files.FileInfo) {
@@ -206,7 +219,7 @@ func rawFileHandler(w http.ResponseWriter, r *http.Request, file *files.FileInfo
 	defer fd.Close()
 
 	setContentDisposition(w, r, file)
-	w.Header().Add("Content-Security-Policy", `script-src 'none';`)
+	setUntrustedContentCSP(w, file.Name)
 	w.Header().Set("Cache-Control", "private")
 	http.ServeContent(w, r, file.Name, file.ModTime, fd)
 	return 0, nil

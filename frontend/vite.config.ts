@@ -46,6 +46,9 @@ export default defineConfig(({ command }) => {
       plugins,
       resolve,
       base: "",
+      html: {
+        cspNonce: "[{[ .CSPNonce ]}]",
+      },
       build: {
         rollupOptions: {
           input: {
