@@ -20,6 +20,7 @@ RUN apt-get update && \
        media-types \
        wget \
        ldap-utils \
+       libnss-ldapd \
        procps \
        curl \
        jq \
@@ -28,10 +29,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN wget https://ftp.debian.org/debian/pool/main/libn/libnss-ldap/libnss-ldap_265-6_amd64.deb && \
-  wget https://ftp.debian.org/debian/pool/main/o/openldap/libldap-2.4-2_2.4.57+dfsg-3+deb11u1_amd64.deb && \
-  apt-get install -y "./libldap-2.4-2_2.4.57+dfsg-3+deb11u1_amd64.deb" "./libnss-ldap_265-6_amd64.deb"
-
+# NSS LDAP resolution is provided by the injected nslcd sidecar (nss-pam-ldapd):
+# this image only needs the thin libnss-ldapd client (installed above), which
+# talks to the sidecar over the shared /var/run/nslcd/socket. The retired
+# libnss-ldap (EOL, hand-pulled deb11 .debs) is no longer used.
 
 HEALTHCHECK --start-period=2s --interval=5s --timeout=3s CMD /healthcheck.sh || exit 1
 
