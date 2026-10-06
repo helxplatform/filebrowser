@@ -8,6 +8,7 @@ package http
 // access them from a different URL during development
 var globalHeaders = map[string]string{
 	"Cache-Control":                    "no-cache, no-store, must-revalidate",
+	"X-Content-Type-Options":           "nosniff",
 	"Access-Control-Allow-Origin":      "*",
 	"Access-Control-Allow-Headers":     "*",
 	"Access-Control-Allow-Methods":     "*",
