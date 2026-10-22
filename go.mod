@@ -9,7 +9,7 @@ go 1.25.0
 // free of the stdlib CVEs affecting go1.23.x (51 findings, incl.
 // CVE-2025-68121). Bump this alongside CI when a newer patch release lands;
 // a build forced to GOTOOLCHAIN=local on an old Go will reintroduce them.
-toolchain go1.26.5
+toolchain go1.26.10
 
 require (
 	github.com/asdine/storm/v3 v3.2.1
