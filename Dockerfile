@@ -26,8 +26,16 @@ RUN apt-get update && \
        jq \
        tini \
        trash-cli && \
+    sed -i 's|^mozilla/emSign_|!mozilla/emSign_|' /etc/ca-certificates.conf && \
+    update-ca-certificates --fresh && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# CVE-2026-111943: eMudhra/emSign intermediate CA keys were compromised. The
+# `!` prefix in ca-certificates.conf deselects the emSign roots so system TLS
+# clients (curl, wget, ldap-utils) stop trusting them; --fresh rebuilds
+# /etc/ssl/certs and the bundle from scratch. The Go binary is covered
+# separately by the crypto/x509 denylist in its toolchain.
 
 # NSS LDAP resolution is provided by the injected nslcd sidecar (nss-pam-ldapd):
 # this image only needs the thin libnss-ldapd client (installed above), which
