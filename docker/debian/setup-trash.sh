@@ -3,7 +3,8 @@ set -ex
 
 DB_DIR_PATH="$HOME/.filebrowser"
 DB_PATH="$DB_DIR_PATH/filebrowser.db"
-CONFIG_PATH="/settings.json"
+# Must match init.sh's relocated CONFIG_PATH -- see its comment for why.
+CONFIG_PATH="$DB_DIR_PATH/settings.json"
 
 # Ensure trash-cli is available
 if ! command -v trash-put >/dev/null 2>&1; then
