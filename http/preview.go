@@ -104,6 +104,7 @@ func handleImagePreview(
 		}
 	}
 
+	setUntrustedContentCSP(w, file.Name)
 	w.Header().Set("Cache-Control", "private")
 	http.ServeContent(w, r, file.Name, file.ModTime, bytes.NewReader(resizedImage))
 

@@ -9,7 +9,7 @@
     />
 
     [{[ if .ReCaptcha -]}]
-    <script src="[{[ .ReCaptchaHost ]}]/recaptcha/api.js?render=explicit"></script>
+    <script nonce="[{[ .CSPNonce ]}]" src="[{[ .ReCaptchaHost ]}]/recaptcha/api.js?render=explicit"></script>
     [{[ end ]}]
 
     <title>
@@ -62,7 +62,7 @@
     />
 
     <!-- Inject Some Variables and generate the manifest json -->
-    <script>
+    <script nonce="[{[ .CSPNonce ]}]">
       // We can assign JSON directly
       window.FileBrowser = [{[ .Json ]}];
       // Global function to prepend static url

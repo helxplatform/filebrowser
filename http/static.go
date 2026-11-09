@@ -1,6 +1,8 @@
 package http
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,8 +21,45 @@ import (
 	"github.com/filebrowser/filebrowser/v2/version"
 )
 
+func newCSPNonce() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(b), nil
+}
+
+// The app shell must not allow 'self' as a script source: user files served
+// from /api/raw and /api/public/dl are same-origin and would satisfy it.
+func appShellCSP(nonce, reCaptchaHost string) string {
+	frameSrc := "'self' blob:"
+	connectSrc := "'self'"
+	if reCaptchaHost != "" {
+		frameSrc += " " + reCaptchaHost
+		connectSrc += " " + reCaptchaHost
+	}
+	return "default-src 'self'; " +
+		"script-src 'nonce-" + nonce + "' 'strict-dynamic'; " +
+		"style-src 'self' 'unsafe-inline' blob:; " +
+		"img-src 'self' data: blob:; " +
+		"font-src 'self' data: blob:; " +
+		"media-src 'self' blob:; " +
+		"worker-src 'self' blob:; " +
+		"manifest-src 'self' blob:; " +
+		"frame-src " + frameSrc + "; " +
+		"connect-src " + connectSrc + "; " +
+		"object-src 'self'; " +
+		"base-uri 'self'; " +
+		"form-action 'self';"
+}
+
 func handleWithStaticData(w http.ResponseWriter, _ *http.Request, d *data, fSys fs.FS, file, contentType string) (int, error) {
 	w.Header().Set("Content-Type", contentType)
+
+	nonce, err := newCSPNonce()
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 
 	auther, err := d.store.Auth.Get(d.settings.AuthMethod)
 	if err != nil {
@@ -47,6 +86,7 @@ func handleWithStaticData(w http.ResponseWriter, _ *http.Request, d *data, fSys 
 		"EnableExec":            d.server.EnableExec,
 		"TusSettings":           d.settings.Tus,
 	}
+	reCaptchaHost := ""
 
 	if d.settings.Branding.Files != "" {
 		fPath := filepath.Join(d.settings.Branding.Files, "custom.css")
@@ -73,6 +113,9 @@ func handleWithStaticData(w http.ResponseWriter, _ *http.Request, d *data, fSys 
 			data["ReCaptcha"] = auther.ReCaptcha.Key != "" && auther.ReCaptcha.Secret != ""
 			data["ReCaptchaHost"] = auther.ReCaptcha.Host
 			data["ReCaptchaKey"] = auther.ReCaptcha.Key
+			if data["ReCaptcha"] == true {
+				reCaptchaHost = auther.ReCaptcha.Host
+			}
 		}
 	}
 
@@ -82,6 +125,8 @@ func handleWithStaticData(w http.ResponseWriter, _ *http.Request, d *data, fSys 
 	}
 
 	data["Json"] = strings.ReplaceAll(string(b), `'`, `\'`)
+	data["CSPNonce"] = nonce
+	w.Header().Set("Content-Security-Policy", appShellCSP(nonce, reCaptchaHost))
 
 	fileContents, err := fs.ReadFile(fSys, file)
 	if err != nil {
