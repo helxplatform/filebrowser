@@ -4,7 +4,13 @@ set -e
 
 DB_DIR_PATH="${HOME}/.filebrowser"
 DB_PATH="${DB_DIR_PATH}/filebrowser.db"
-CONFIG_PATH="/settings.json"
+# Was "/settings.json" at the filesystem root: that path is baked into the
+# image and rewritten in place by every `config`/`users`/`cmds` call below,
+# which breaks under a read-only root filesystem. Its content doesn't matter
+# (CLI flags like -d/--auth.method take precedence over the config file per
+# filebrowser's own documented precedence), only that it's writable, so it
+# lives alongside the database under $HOME instead.
+CONFIG_PATH="${DB_DIR_PATH}/settings.json"
 
 SAFE_SOFTLINK_HELX="/helx-softlink.sh"
 SETUP_TRASH="/setup-trash.sh"
